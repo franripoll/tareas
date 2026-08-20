@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tareas</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121212;
+    --surface: #1C1C1E;
+    --surface-hover: #232325;
+    --border: #2A2A2C;
+    --text: #ECECEC;
+    --text-secondary: #8E8E93;
+    --text-tertiary: #636366;
+    --red: #FF6B60;
+
+    --area-mayor: #5B8DBE;
+    --area-musica: #C9A24C;
+    --area-pastera: #4FA893;
+    --area-personal: #A97CA5;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+  html, body{ height:100%; }
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+    padding: max(24px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom)) 12px;
+  }
+
+  .phone{
+    width:100%;
+    max-width:460px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* header */
+  header{
+    padding: 4px 4px 20px 4px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .eyebrow{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--text-tertiary);
+    margin-bottom:6px;
+  }
+  .date{
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    text-transform:capitalize;
+  }
+  .backup-link{
+    font-size:12px;
+    color: var(--text-tertiary);
+    cursor:pointer;
+    padding:6px 0;
+    flex-shrink:0;
+  }
+  .backup-link:hover{ color: var(--text-secondary); }
+
+  .backup-panel{
+    display:none;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    margin: 0 4px 16px 4px;
+    gap:10px;
+    flex-direction:column;
+  }
+  .backup-panel.show{ display:flex; }
+  .backup-panel p{ font-size:12px; color: var(--text-secondary); line-height:1.5; }
+  .backup-actions{ display:flex; gap:10px; }
+  .backup-actions button{
+    background: var(--surface-hover);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 13px;
+    font-family:inherit;
+    font-size:12.5px;
+    color: var(--text);
+    cursor:pointer;
+  }
+
+  /* tabs */
+  .tabs{
+    display:flex;
+    gap:14px;
+    border-bottom:1px solid var(--border);
+    padding: 0 4px;
+    margin-bottom: 16px;
+  }
+  .tab{
+    background:none;
+    border:none;
+    color: var(--text-tertiary);
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:600;
+    padding: 10px 2px 12px 2px;
+    cursor:pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease;
+  }
+  .tab.active{ color: var(--text); border-bottom-color: var(--text); }
+
+  /* content panels */
+  .panel{ display:none; flex-direction:column; gap:10px; padding: 0 4px; }
+  .panel.active{ display:flex; }
+
+  .section-label{
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color: var(--text-tertiary);
+    margin: 14px 2px 2px 2px;
+  }
+  .section-label:first-child{ margin-top:0; }
+
+  /* task card */
+  .card{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-left: 3px solid var(--area-color, var(--text-tertiary));
+    border-radius: 10px;
+    padding: 12px 14px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .check{
+    width:19px; height:19px;
+    border-radius:50%;
+    border:1.5px solid var(--text-tertiary);
+    flex-shrink:0;
+    margin-top:2px;
+    cursor:pointer;
+    transition: all .15s ease;
+    position:relative;
+  }
+  .check.done{ background: var(--text-secondary); border-color: var(--text-secondary); }
+  .check.done::after{
+    content:'';
+    position:absolute; left:5px; top:2px;
+    width:5px; height:9px;
+    border-right:2px solid var(--bg);
+    border-bottom:2px solid var(--bg);
+    transform: rotate(40deg);
+  }
+  .card-body{ flex:1; min-width:0; cursor:pointer; }
+  .task-title{ font-size:14.5px; font-weight:500; line-height:1.35; }
+  .task-title.done{ text-decoration: line-through; color: var(--text-tertiary); opacity:0.7; }
+  .task-meta{ font-size:12.5px; color: var(--text-secondary); margin-top:3px; }
+  .task-meta.overdue{ color: var(--red); }
+  .task-meta .dot-sep{ color: var(--text-tertiary); margin:0 5px; }
+
+  /* streak dots */
+  .streak{ display:flex; align-items:flex-end; gap:7px; margin-top:10px; }
+  .d{ width:7px; height:7px; border-radius:50%; background: var(--border); }
+  .d.filled{ background: var(--area-color, var(--text-secondary)); }
+  .d.today{ box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--area-color, var(--text-secondary)); }
+  .sc{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .sl{ font-size:9px; font-weight:600; color: var(--text-tertiary); line-height:1; }
+
+  .area-name{ color: var(--area-color, var(--text-secondary)); font-weight:600; }
+
+  /* areas tab */
+  .area-group{ margin-bottom: 4px; }
+  .area-header{ display:flex; align-items:center; gap:8px; padding: 6px 2px; }
+  .area-swatch{ width:9px; height:9px; border-radius:50%; background: var(--area-color); flex-shrink:0; }
+  .area-header-name{ font-size:14px; font-weight:600; }
+  .area-header-count{ font-size:12.5px; color: var(--text-tertiary); margin-left:auto; }
+  .area-group .card{ margin-top:8px; }
+
+  .backlog-list, .completed-list, .notes-list{ display:flex; flex-direction:column; gap:8px; }
+
+  /* search */
+  .search-wrap{ margin: 0 4px 12px 4px; }
+  .search-wrap input{
+    width:100%;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family:inherit;
+    font-size:13px;
+    outline:none;
+  }
+  .search-wrap input::placeholder{ color: var(--text-tertiary); }
+
+  /* quick add */
+  .quickadd-wrap{ margin: 0 4px 16px 4px; }
+  .quickadd{
+    display:flex; align-items:center; gap:10px;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding: 11px 14px;
+  }
+  .quickadd .plus{ color: var(--text-tertiary); font-size:17px; line-height:1; }
+  .quickadd input{
+    flex:1; background:none; border:none; outline:none;
+    color:var(--text); font-family:inherit; font-size:14px;
+  }
+  .quickadd input::placeholder{ color: var(--text-tertiary); }
+
+  .quickadd-details{ display:none; border:1px solid transparent; border-radius:10px; }
+  .quickadd-details.expanded{
+    display:block;
+    border-color: var(--border);
+    border-top:none;
+    border-radius:0 0 10px 10px;
+    margin-top:-1px;
+    background: var(--surface);
+    padding: 4px 14px 10px 14px;
+  }
+  .qa-row{ display:flex; align-items:center; gap:8px; padding:8px 0; flex-wrap:wrap; border-top:1px solid var(--border); }
+  .qa-row:first-child{ border-top:none; }
+  .qa-label{ font-size:11px; color: var(--text-tertiary); width:46px; flex-shrink:0; }
+  .qa-chips{ display:flex; gap:6px; flex-wrap:wrap; }
+  .qa-chips-col{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; }
+  .date-input{
+    display:none;
+    background: var(--surface-hover);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color: var(--text);
+    font-family:inherit;
+    font-size:12.5px;
+    padding:6px 8px;
+    width:100%;
+    color-scheme: dark;
+  }
+  .date-input.show{ display:block; }
+  .chip{
+    background: var(--surface-hover);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:5px 12px;
+    font-size:12px;
+    font-family:inherit;
+    color: var(--text-secondary);
+    cursor:pointer;
+  }
+  .area-chip{ position:relative; padding-left:20px; }
+  .area-chip::before{
+    content:''; position:absolute; left:9px; top:50%; transform:translateY(-50%);
+    width:7px; height:7px; border-radius:50%;
+    background: var(--chip-color, var(--text-tertiary));
+  }
+  .area-chip.selected{ border-color: var(--chip-color); color: var(--text); background: var(--surface-hover); }
+  .add-area-chip{ padding-left:12px; border-style:dashed; }
+  .add-area-chip::before{ content:none; }
+  .date-chip.selected{ border-color: var(--text-secondary); color: var(--text); }
+  .qa-segmented{ display:flex; }
+  .qa-segmented .seg{
+    background: var(--surface-hover); border:1px solid var(--border);
+    padding:5px 13px; font-size:12px; font-family:inherit; color: var(--text-secondary); cursor:pointer;
+  }
+  .qa-segmented .seg:first-child{ border-radius:20px 0 0 20px; border-right:none; }
+  .qa-segmented .seg:last-child{ border-radius:0 20px 20px 0; }
+  .seg.active{ background: var(--surface-hover); color: var(--text); border-color: var(--text-secondary); }
+  .day-chip{ width:26px; height:26px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .day-chip.selected{ border-color: var(--text-secondary); color: var(--text); background: var(--surface-hover); }
+  .qa-actions{ display:flex; align-items:center; justify-content:flex-end; gap:14px; padding-top:8px; }
+  .qa-actions .note-save{ margin-top:0; float:none; }
+  .qa-cancel{ font-size:12px; color: var(--text-tertiary); cursor:pointer; }
+
+  .empty{ color: var(--text-tertiary); font-size:13px; padding: 20px 4px; text-align:center; }
+
+  /* completed / historial */
+  .completed-toggle{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600; color: var(--text-tertiary);
+    padding: 10px 2px; cursor:pointer; margin-top:4px;
+  }
+  .completed-toggle .chev{ transition: transform .15s ease; font-size:10px; }
+  .completed-toggle.open .chev{ transform: rotate(180deg); }
+
+  /* notes */
+  .note-capture{
+    background: var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding: 10px 12px; margin-bottom:12px;
+  }
+  .note-title-input{
+    width:100%; background:none; border:none; outline:none;
+    color: var(--text); font-family:inherit; font-size:14px; font-weight:600;
+    padding-bottom:8px; margin-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .note-title-input::placeholder{ color: var(--text-tertiary); font-weight:500; }
+  .note-capture textarea{
+    width:100%; background:none; border:none; outline:none; resize:none;
+    color: var(--text); font-family:inherit; font-size:13.5px; line-height:1.4; max-height:140px;
+  }
+  .note-capture textarea::placeholder{ color: var(--text-tertiary); }
+  .note-save{
+    display:none; margin-top:8px;
+    background: var(--text); color: var(--bg); border:none; border-radius:8px;
+    padding:6px 14px; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; float:right;
+  }
+  .note-save.show{ display:block; }
+
+  .tag-filter{ margin-bottom:14px; }
+  .tag-chip.active{ border-color: var(--text-secondary); color: var(--text); background: var(--surface-hover); }
+
+  .note-card{ background: var(--surface); border:1px solid var(--border); border-radius:10px; padding: 12px 14px; cursor:pointer; }
+  .note-title{ font-size:15.5px; font-weight:700; letter-spacing:-0.01em; color: var(--text); margin-bottom:5px; }
+  .note-text{
+    font-size:13px; line-height:1.5; color: var(--text-secondary);
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    white-space:pre-wrap;
+  }
+  .note-card.expanded .note-text{ -webkit-line-clamp:unset; }
+  .note-footer{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
+  .note-tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .note-tags .tag{ font-size:11.5px; color: var(--text-tertiary); }
+  .note-date{ font-size:11.5px; color: var(--text-tertiary); flex-shrink:0; }
+  .note-actions{ display:none; gap:18px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .note-card.expanded .note-actions{ display:flex; }
+  .note-action{ font-size:12px; color: var(--text-secondary); cursor:pointer; }
+  .note-action:hover{ color: var(--text); }
+  .note-action.pinned{ color: var(--area-musica); font-weight:600; }
+  .note-action.danger{ color: var(--red); }
+
+  /* edit modal */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background: rgba(0,0,0,0.55);
+    align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .modal-backdrop.show{ display:flex; }
+  .modal{
+    width:100%; max-width:460px; background: var(--surface); border:1px solid var(--border);
+    border-radius: 16px 16px 0 0; padding: 18px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+    max-height:85vh; overflow-y:auto;
+  }
+  .edit-title-input{
+    width:100%; background:none; border:none; outline:none;
+    color: var(--text); font-family:inherit; font-size:16px; font-weight:600;
+    padding-bottom:10px; margin-bottom:4px; border-bottom:1px solid var(--border);
+  }
+  .modal-actions{ display:flex; align-items:center; gap:16px; padding-top:12px; margin-top:4px; border-top:1px solid var(--border); }
+  .modal-actions .note-save{ float:none; }
+
+  /* toast */
+  .toast{
+    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); left:50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-hover); border:1px solid var(--border); border-radius:10px;
+    padding: 11px 16px; display:flex; align-items:center; gap:16px;
+    font-size:13px; color: var(--text); opacity:0; pointer-events:none;
+    transition: opacity .18s ease, transform .18s ease; z-index:60;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+  .toast-undo{ color: var(--area-mayor); font-weight:600; cursor:pointer; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <header>
+    <div>
+      <div class="eyebrow">Tareas</div>
+      <div class="date" id="headerDate"></div>
+    </div>
+    <span class="backup-link" id="backupLink">Backup</span>
+  </header>
+
+  <div class="backup-panel" id="backupPanel">
+    <p>Copia de seguridad manual de tus tareas y notas. Guárdala de vez en cuando por si acaso.</p>
+    <div class="backup-actions">
+      <button type="button" id="exportBtn">Exportar</button>
+      <button type="button" id="importBtn">Importar</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="hoy">Hoy</button>
+    <button class="tab" data-tab="areas">Áreas</button>
+    <button class="tab" data-tab="backlog">Pendientes</button>
+    <button class="tab" data-tab="notas">Notas</button>
+  </div>
+
+  <div class="search-wrap" id="taskSearchWrap">
+    <input type="text" id="taskSearch" placeholder="Buscar tareas...">
+  </div>
+
+  <div class="quickadd-wrap" id="taskQuickAddWrap">
+    <div class="quickadd">
+      <span class="plus">+</span>
+      <input type="text" id="quickAddInput" placeholder="Añadir tarea...">
+    </div>
+    <div class="quickadd-details" id="quickAddDetails">
+      <div class="qa-row">
+        <span class="qa-label">Área</span>
+        <div class="qa-chips" id="areaChips"></div>
+      </div>
+      <div class="qa-row">
+        <span class="qa-label">Tipo</span>
+        <div class="qa-segmented" id="typeSegmented">
+          <button type="button" class="seg active" data-type="puntual">Puntual</button>
+          <button type="button" class="seg" data-type="recurrente">Recurrente</button>
+        </div>
+      </div>
+      <div class="qa-row" id="dateRow">
+        <span class="qa-label">Cuándo</span>
+        <div class="qa-chips-col">
+          <div class="qa-chips" id="dateChips">
+            <button type="button" class="chip date-chip selected" data-date="hoy">Hoy</button>
+            <button type="button" class="chip date-chip" data-date="mañana">Mañana</button>
+            <button type="button" class="chip date-chip" data-date="">Sin fecha</button>
+            <button type="button" class="chip date-chip" id="customDateChip" data-date="custom">Elegir fecha</button>
+          </div>
+          <input type="date" id="customDateInput" class="date-input">
+        </div>
+      </div>
+      <div class="qa-row" id="freqRow" style="display:none">
+        <span class="qa-label">Se repite</span>
+        <div class="qa-chips" id="freqChips">
+          <button type="button" class="chip day-chip selected" data-day="L">L</button>
+          <button type="button" class="chip day-chip selected" data-day="M">M</button>
+          <button type="button" class="chip day-chip selected" data-day="X">X</button>
+          <button type="button" class="chip day-chip selected" data-day="J">J</button>
+          <button type="button" class="chip day-chip selected" data-day="V">V</button>
+          <button type="button" class="chip day-chip selected" data-day="S">S</button>
+          <button type="button" class="chip day-chip selected" data-day="D">D</button>
+        </div>
+      </div>
+      <div class="qa-actions"><span class="qa-cancel" id="qaCancel">Cancelar</span><button type="button" class="note-save show" id="qaSave">Guardar</button></div>
+    </div>
+  </div>
+
+  <!-- HOY -->
+  <div class="panel active" id="hoy">
+    <div id="hoyContent"></div>
+  </div>
+
+  <!-- AREAS -->
+  <div class="panel" id="areas">
+    <div id="areasContent"></div>
+  </div>
+
+  <!-- BACKLOG -->
+  <div class="panel" id="backlog">
+    <div class="backlog-list" id="backlogList"></div>
+    <div class="empty" id="backlogEmpty" style="display:none">No hay tareas sin fecha.</div>
+  </div>
+
+  <!-- NOTAS -->
+  <div class="panel" id="notas">
+
+    <div class="search-wrap">
+      <input type="text" id="noteSearch" placeholder="Buscar en notas...">
+    </div>
+
+    <div class="note-capture">
+      <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Título (opcional)">
+      <textarea id="noteInput" rows="1" placeholder="Escribe una nota... usa #etiquetas"></textarea>
+      <button type="button" id="noteSaveBtn" class="note-save">Guardar</button>
+    </div>
+
+    <div class="qa-chips tag-filter" id="tagFilter"></div>
+
+    <div class="notes-list" id="notesList"></div>
+    <div class="empty" id="notesEmpty" style="display:none">No hay notas todavía.</div>
+
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="editBackdrop">
+  <div class="modal" id="editModal">
+    <input type="text" id="editTitleInput" class="edit-title-input" placeholder="Título de la tarea">
+    <div class="qa-row">
+      <span class="qa-label">Área</span>
+      <div class="qa-chips" id="editAreaChips"></div>
+    </div>
+    <div class="qa-row">
+      <span class="qa-label">Tipo</span>
+      <div class="qa-segmented" id="editTypeSegmented">
+        <button type="button" class="seg" data-type="puntual">Puntual</button>
+        <button type="button" class="seg" data-type="recurrente">Recurrente</button>
+      </div>
+    </div>
+    <div class="qa-row" id="editDateRow">
+      <span class="qa-label">Cuándo</span>
+      <div class="qa-chips-col">
+        <div class="qa-chips" id="editDateChips">
+          <button type="button" class="chip date-chip" data-date="hoy">Hoy</button>
+          <button type="button" class="chip date-chip" data-date="mañana">Mañana</button>
+          <button type="button" class="chip date-chip" data-date="">Sin fecha</button>
+          <button type="button" class="chip date-chip" id="editCustomDateChip" data-date="custom">Elegir fecha</button>
+        </div>
+        <input type="date" id="editCustomDateInput" class="date-input">
+      </div>
+    </div>
+    <div class="qa-row" id="editFreqRow" style="display:none">
+      <span class="qa-label">Se repite</span>
+      <div class="qa-chips" id="editFreqChips">
+        <button type="button" class="chip day-chip" data-day="L">L</button>
+        <button type="button" class="chip day-chip" data-day="M">M</button>
+        <button type="button" class="chip day-chip" data-day="X">X</button>
+        <button type="button" class="chip day-chip" data-day="J">J</button>
+        <button type="button" class="chip day-chip" data-day="V">V</button>
+        <button type="button" class="chip day-chip" data-day="S">S</button>
+        <button type="button" class="chip day-chip" data-day="D">D</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <span class="qa-cancel" id="editDelete" style="color:var(--red)">Eliminar</span>
+      <div style="flex:1"></div>
+      <span class="qa-cancel" id="editCancel">Cancelar</span>
+      <button type="button" class="note-save show" id="editSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="undoToast">
+  <span id="toastMessage"></span>
+  <span class="toast-undo" id="toastUndo">Deshacer</span>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
