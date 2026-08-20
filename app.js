@@ -923,6 +923,30 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 });
 
 /* ============================================================
+   BLOQUEO DE ZOOM (pellizco y doble-toque)
+   El viewport con user-scalable=no ya no es suficiente en
+   navegadores modernos, así que se refuerza por JS.
+   ============================================================ */
+
+// pellizco (gestos nativos de Safari/iOS)
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('gesturechange', (e) => e.preventDefault());
+document.addEventListener('gestureend', (e) => e.preventDefault());
+
+// pellizco con dos dedos (resto de navegadores)
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+// doble-toque para hacer zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+/* ============================================================
    ARRANQUE
    ============================================================ */
 
