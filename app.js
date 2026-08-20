@@ -344,6 +344,26 @@ function renderHoy() {
   toggle.className = 'completed-toggle';
   toggle.id = 'completedToggle';
   toggle.innerHTML = `<span>Completadas hoy (${completed.length})</span> <span class="chev">▾</span>`;
+
+  // vista previa de "Pendientes" (sin fecha), visible sin cambiar de pestaña
+  const backlog = state.tasks.filter(t => t.type === 'puntual' && !t.done && t.date === '');
+  if (backlog.length) {
+    const PREVIEW_LIMIT = 4;
+    const label3 = document.createElement('div');
+    label3.className = 'section-label';
+    label3.textContent = 'Pendientes';
+    container.appendChild(label3);
+    backlog.slice(0, PREVIEW_LIMIT).forEach(t => container.appendChild(buildTaskCard(t)));
+    if (backlog.length > PREVIEW_LIMIT) {
+      const more = document.createElement('div');
+      more.className = 'completed-toggle';
+      more.style.marginTop = '2px';
+      more.innerHTML = `<span>Ver todas (${backlog.length})</span>`;
+      more.addEventListener('click', () => document.querySelector('.tab[data-tab="backlog"]').click());
+      container.appendChild(more);
+    }
+  }
+
   container.appendChild(toggle);
 
   const completedWrap = document.createElement('div');
